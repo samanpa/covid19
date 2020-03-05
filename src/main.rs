@@ -1,94 +1,65 @@
-use serde::Deserialize;
+mod data;
+
+use data::{Record, Summary};
 use structopt::StructOpt;
-
-#[derive(Deserialize)]
-struct Row(String, String, u32, u32);
-
-#[derive(Debug)]
-struct Record {
-    province: String,
-    country: String,
-    yesterday: u32,
-    today: u32,
-}
-
-
-impl std::fmt::Display for Record {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{:43} {:5} {:5}\t{:8.1}%",
-               self.province,
-               self.yesterday,
-               self.today,
-               (self.today - self.yesterday) as f64 / self.yesterday as f64 * 100.
-        )
-    }
-}
 
 #[derive(StructOpt)]
 struct Opts {
+    #[structopt(
+        long,
+        short,
+        default_value = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv"
+    )]
+    url: String,
     #[structopt(subcommand)]
     cmd: Command,
 }
 
 #[derive(StructOpt)]
 enum Command {
-    Select {
-        country: String
-    }
+    Select { country: String },
+    Countries,
 }
 
-
-fn read() -> Result<Vec<Record>, Box<dyn std::error::Error>> {
-    let mut records = Vec::new();
-    let mut rdr = csv::Reader::from_reader(std::io::stdin());
-    for result in rdr.deserialize() {
-        let row: Row = result?;
-        let record = Record {
-            province: row.0,
-            country: row.1,
-            yesterday: row.2,
-            today: row.3,
-        };
-        records.push(record);
-    }
-    Ok(records)
-}
-
-fn main() {
-    let records = match read() {
-        Ok(records) => records,
-        Err(e) => {
-            println!("{:?}", e);
-            return;
-        }
-    };
-
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let opts = Opts::from_args();
-    let results = match opts.cmd {
-        Command::Select{ country } => {
-            let mut results: Vec<_> = records.into_iter()
-                .filter(|record| record.country == country)
-                .collect();
-            results.sort_by_key(|result| result.yesterday as i32 - result.today as i32);
-            for result in &results {
-                println!("{}", result);
-            }
+    let file = reqwest::blocking::get(&opts.url)?.text()?;
+    let file = Box::new(std::io::Cursor::new(file.into_bytes()));
 
-            results
+    let records = data::read(file)?;
+    let mut results: Vec<Record> = match opts.cmd {
+        Command::Select { country } => records
+            .into_iter()
+            .filter(|record| record.country == country)
+            .collect(),
+        Command::Countries => {
+            let mut countries = std::collections::HashMap::new();
+            for record in &records {
+                let summary: &mut Summary = countries.entry(&record.country).or_default();
+                summary.today += record.summary.today;
+                summary.yesterday += record.summary.yesterday;
+            }
+            countries
+                .into_iter()
+                .map(|(key, summary)| Record {
+                    country: key.to_string(),
+                    province: key.to_string(),
+                    summary,
+                })
+                .collect()
         }
     };
 
-    let summary = Record {
-        province: String::new(),
-        country: String::new(),
-        yesterday: 0,
-        today: 0
-    };
-    let summary = results.iter().fold(summary, |prev, next| Record {
-        yesterday: prev.yesterday + next.yesterday,
-        today: prev.today + next.today,
-        province: String::new(),
-        country: String::new(),
+    results.sort_by_key(|result| result.summary.change());
+    for result in &results {
+        println!("{:43}{}", result.province, result.summary);
+    }
+    let summary = Summary::default();
+    let summary = results.iter().fold(summary, |prev, next| Summary {
+        yesterday: prev.yesterday + next.summary.yesterday,
+        today: prev.today + next.summary.today,
     });
-    println!("-------------------\n{}", summary);
+    println!("-------------------\n{:43}{}", "", summary);
+
+    Ok(())
 }
