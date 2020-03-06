@@ -22,6 +22,8 @@ enum Command {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    env_logger::init();
+
     let opts = Opts::from_args();
     let file = reqwest::blocking::get(&opts.url)?.text()?;
     let file = Box::new(std::io::Cursor::new(file.into_bytes()));
