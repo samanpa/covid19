@@ -15,6 +15,8 @@ struct Opts {
     url: String,
     #[structopt(long, short, default_value="2")]
     num_days: usize,
+    #[structopt(long)]
+    by_name: bool,
     #[structopt(subcommand)]
     cmd: Command,
 }
@@ -58,7 +60,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let ops = Op::Combine(Box::new(op), Box::new(select));
     let table = ops::eval(&ops, &table);
-    let table = ops::eval(&Op::SortBy(SortBy::Max), &table);
+    let table = if opts.by_name {
+        ops::eval(&Op::SortBy(SortBy::Name), &table)
+    } else {
+        ops::eval(&Op::SortBy(SortBy::Max), &table)
+    };
 
     table.write(std::io::stdout())?;
 

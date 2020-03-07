@@ -24,7 +24,6 @@ pub struct Name {
 #[derive(Debug, Copy, Clone)]
 pub enum Place {
     Country,
-    City,
     State,
 }
 
@@ -55,14 +54,12 @@ impl Name {
                 province,
                 city: String::new(),
             },
-            _ => self.clone(),
         }
     }
 
     pub fn get(&self, place: Place) -> &str {
         match place {
             Place::Country => &self.country,
-            Place::City => &self.city,
             Place::State => &self.province,
         }
     }
