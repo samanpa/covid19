@@ -1,6 +1,6 @@
 [package]
 name = "covid19"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Paa Kojo Samanpa <samanpa@gmail.com>"]
 edition = "2018"
 
@@ -10,3 +10,4 @@ csv="*"
 reqwest = { version = "0.10", features = ["blocking", "rustls-tls"] }
 serde = { version = "1", features = ["derive"] }
 structopt = "*"
+tabwriter = "*"

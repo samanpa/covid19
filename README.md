@@ -1,39 +1,58 @@
+Utility to get summary of covid data because why not
+- Original data can be found [here](https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv)
+
+
 ```sh
-$ cargo +nightly run select US
-    Finished dev [unoptimized + debuginfo] target(s) in 0.13s
-     Running `target/debug/covid19 select US`
-Cook County, IL                                4     4       0.0%
-Tempe, AZ                                      1     1       0.0%
-Santa Clara, CA                               11    11       0.0%
-Boston, MA                                     1     1       0.0%
-San Benito, CA                                 2     2       0.0%
-Madison, WI                                    1     1       0.0%
-San Diego County, CA                           2     2       0.0%
-San Antonio, TX                                1     1       0.0%
-Humboldt County, CA                            1     1       0.0%
-Sacramento County, CA                          2     2       0.0%
-Unassigned Location (From Diamond Princess)   45    45       0.0%
-Providence, RI                                 2     2       0.0%
-Grafton County, NH                             2     2       0.0%
-Hillsborough, FL                               2     2       0.0%
-New York City, NY                              1     1       0.0%
-San Mateo, CA                                  2     2       0.0%
-Sarasota, FL                                   1     1       0.0%
-Sonoma County, CA                              1     1       0.0%
-Umatilla, OR                                   1     1       0.0%
-Fulton County, GA                              2     2       0.0%
-Washington County, OR                          2     2       0.0%
-Norfolk County, MA                             1     1       0.0%
-Berkeley, CA                                   1     1       0.0%
-Maricopa County, AZ                            1     1       0.0%
-Wake County, NC                                1     1       0.0%
-Placer County, CA                              1     2     100.0%
-Contra Costa County, CA                        0     1       inf%
-Snohomish County, WA                           6     8      33.3%
-Orange County, CA                              1     3     200.0%
-Los Angeles, CA                                1     7     600.0%
-Westchester County, NY                         1    10     900.0%
-King County, WA                               21    31      47.6%
--------------------
-                                             122   153      25.4%
+USAGE:
+    covid19 [OPTIONS] <SUBCOMMAND>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+    -n, --num-days <num-days>     [default: 2]
+    -u, --url <url>               [default: https://raw.githubusercontent.com/CSSEGISandData/COVID-
+                                 19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-
+                                 Confirmed.csv]
+
+SUBCOMMANDS:
+    country       Summary of cases by country
+    help          Prints this message or the help of the given subcommand(s)
+    summary       Worldwide summary
+    us-summary    Summary of cases in the US by state
+```
+
+```sh
+adamsk@ruth:~/src/self/covid19$ ./target/release/covid19 --num-days 2 us-summary
+City     State                                        Country  3/5/20  3/6/20  
+         CA (From Diamond Princess)                   US       0       0       
+         NE (From Diamond Princess)                   US       0       0       
+         TX (From Diamond Princess)                   US       0       0       
+         IN                                           US       0       1       
+         KY                                           US       0       1       
+         MN                                           US       0       1       
+         NE                                           US       0       1       
+         TN                                           US       1       1       
+         WI                                           US       1       1       
+         NC                                           US       1       2       
+         NH                                           US       2       2       
+         NJ                                           US       2       2       
+         NV                                           US       1       2       
+         PA                                           US       0       2       
+         RI                                           US       2       2       
+         AZ                                           US       2       3       
+         GA                                           US       2       3       
+         MD                                           US       0       3       
+         OR                                           US       3       3       
+         CO                                           US       0       4       
+         FL                                           US       4       4       
+         IL                                           US       5       5       
+         TX                                           US       4       5       
+         MA                                           US       2       7       
+         NY                                           US       23      36      
+         Unassigned Location (From Diamond Princess)  US       45      45      
+         CA                                           US       51      59      
+         WA                                           US       70      83      
+Summary  ------                                       -------  221     278     
 ```

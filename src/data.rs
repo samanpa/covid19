@@ -1,6 +1,4 @@
-use serde::Deserialize;
 use std::error::Error;
-use std::fmt;
 use std::io::Read;
 use std::rc::Rc;
 
@@ -16,7 +14,7 @@ pub struct Row {
     pub data: Vec<u32>,
 }
 
-#[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Hash, Clone)]
 pub struct Name {
     country: String,
     province: String,
@@ -40,6 +38,24 @@ impl Name {
             city: city.trim().to_string(),
             province: province.trim().to_string(),
             country: country.to_string(),
+        }
+    }
+
+    pub fn group_name(&self, place: Place) -> Self {
+        let country = self.country.clone();
+        let province = self.province.clone();
+        match place {
+            Place::Country => Self {
+                country,
+                province: String::new(),
+                city: String::new(),
+            },
+            Place::State => Self {
+                country,
+                province,
+                city: String::new(),
+            },
+            _ => self.clone(),
         }
     }
 
@@ -70,17 +86,54 @@ pub fn read(csv: Box<dyn Read>) -> Result<Table, Box<dyn Error>> {
                 .iter()
                 .map(|val| val.parse().unwrap_or_default())
                 .collect();
-            if data.is_sorted() {
-                data.reverse();
-                if let Some(idx) = data.iter().position(|&v| v == 0) {
-                    data.drain(idx..);
-                };
-                let row = Row { name, data };
-                rows.push(row);
-            }
+            data.reverse();
+            let row = Row { name, data };
+            rows.push(row);
         }
     }
     rows.sort_by_key(|row| row.name.clone());
     let table = Table { header, rows };
     Ok(table)
+}
+
+
+impl Table {
+    pub fn write<W: std::io::Write>(&self, w: W) -> Result<(), std::io::Error> {
+        use std::io::Write;
+        let mut writer = tabwriter::TabWriter::new(w);
+        
+        write!(writer, "City\tState\tCountry\t")?;
+        for header in self.header.iter().rev() {
+            write!(writer, "{}\t", header)?;
+        }
+        writeln!(writer)?;
+        
+        for row in &self.rows {
+            let nm = &row.name;
+            write!(writer, "{}\t{}\t{}\t", nm.city, nm.province, nm.country)?;
+            for val in row.data.iter().rev() {
+                write!(writer, "{}\t", val)?;
+            }
+            writeln!(writer)?;
+        }
+
+        //writeln!(writer, "-------------------------------\n")?;
+        let mut summary = Vec::new();
+        for row in &self.rows {
+            let data = row.data.iter().rev();
+            if summary.is_empty() {
+                summary = data.copied().collect();
+            } else {
+                summary.iter_mut()
+                    .zip(data)
+                    .for_each(|(v1, v2)| *v1 += v2);
+            }
+        }
+        write!(writer, "Summary\t------\t-------\t")?;
+        for val in summary {
+            write!(writer, "{}\t", val)?;
+        }
+        writeln!(writer, "\n")?;
+        writer.flush()
+    }
 }
