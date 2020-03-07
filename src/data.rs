@@ -114,7 +114,6 @@ impl Table {
             writeln!(writer)?;
         }
 
-        //writeln!(writer, "-------------------------------\n")?;
         let mut summary = Vec::new();
         for row in &self.rows {
             let data = row.data.iter().rev();
