@@ -1,58 +1,86 @@
 use serde::Deserialize;
-
-#[derive(Deserialize)]
-struct Row(String, String, u32, u32);
+use std::error::Error;
+use std::fmt;
+use std::io::Read;
+use std::rc::Rc;
 
 #[derive(Debug)]
-pub struct Record {
-    pub province: String,
-    pub country: String,
-    pub summary: Summary,
+pub struct Table {
+    pub header: Rc<Vec<String>>,
+    pub rows: Vec<Row>,
 }
 
-#[derive(Debug, Default, Clone, Copy)]
-pub struct Summary {
-    pub yesterday: u32,
-    pub today: u32,
+#[derive(Debug, Clone)]
+pub struct Row {
+    pub name: Name,
+    pub data: Vec<u32>,
 }
 
-impl Summary {
-    pub fn change(&self) -> u32 {
-        self.today - self.yesterday
+#[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Clone)]
+pub struct Name {
+    country: String,
+    province: String,
+    city: String,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum Place {
+    Country,
+    City,
+    State,
+}
+
+impl Name {
+    pub fn new(city_or_province: &str, country: &str) -> Self {
+        let (city, province) = match city_or_province.find(',') {
+            Some(idx) => (&city_or_province[..idx], &city_or_province[idx + 1..]),
+            None => ("", city_or_province),
+        };
+        Name {
+            city: city.trim().to_string(),
+            province: province.trim().to_string(),
+            country: country.to_string(),
+        }
+    }
+
+    pub fn get(&self, place: Place) -> &str {
+        match place {
+            Place::Country => &self.country,
+            Place::City => &self.city,
+            Place::State => &self.province,
+        }
     }
 }
 
-impl std::fmt::Display for Summary {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "{:5} {:5}\t{:8.1}%",
-            self.yesterday,
-            self.today,
-            (self.today - self.yesterday) as f64 / self.yesterday as f64 * 100.
-        )
-    }
-}
-
-pub fn read(csv_data: Box<dyn std::io::Read>) -> Result<Vec<Record>, Box<dyn std::error::Error>> {
-    let mut records = Vec::new();
-    let mut rdr = csv::Reader::from_reader(csv_data);
+pub fn read(csv: Box<dyn Read>) -> Result<Table, Box<dyn Error>> {
+    let mut rows = Vec::new();
+    let mut rdr = csv::Reader::from_reader(csv);
+    let header: Vec<String> = rdr
+        .headers()?
+        .iter()
+        .rev()
+        .map(ToString::to_string)
+        .collect();
+    let header = Rc::new(header);
     for result in rdr.deserialize() {
         let row: Vec<String> = result?;
-        if let [province, country, .., yesterday, today] = row.as_slice() {
-            let summary = Summary {
-                yesterday: yesterday.parse()?,
-                today: today.parse()?,
-            };
-            let record = Record {
-                province: province.trim().to_string(),
-                country: country.trim().to_string(),
-                summary,
-            };
-            if record.summary.today != 0 {
-                records.push(record);
+        if let [province, country, _long, _lat, data @ ..] = row.as_slice() {
+            let name = Name::new(province, country);
+            let mut data: Vec<u32> = data
+                .iter()
+                .map(|val| val.parse().unwrap_or_default())
+                .collect();
+            if data.is_sorted() {
+                data.reverse();
+                if let Some(idx) = data.iter().position(|&v| v == 0) {
+                    data.drain(idx..);
+                };
+                let row = Row { name, data };
+                rows.push(row);
             }
         }
     }
-    Ok(records)
+    rows.sort_by_key(|row| row.name.clone());
+    let table = Table { header, rows };
+    Ok(table)
 }
