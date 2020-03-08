@@ -10,9 +10,10 @@ pub enum Op {
     Combine(Box<Op>, Box<Op>),
     GroupBy(Place),
     Filter {
-        name: String,
+        names: Vec<String>,
         place: Place,
     },
+    Limit(usize),
     Select {
         start: usize,
         size: usize,
@@ -23,20 +24,21 @@ pub enum Op {
 
 pub fn eval(op: &Op, table: &Table) -> Table {
     match op {
-        Op::Filter { name, place } => filter(table, name, *place),
+        Op::Filter { names, place } => filter(table, names, *place),
         Op::GroupBy(place) => group_by(table, *place),
+        Op::Limit(lmit) => limit(table, *lmit),
         Op::Select { start, size, step } => select(table, *start, *size, *step),
         Op::SortBy(op) => sort_by(table, *op),
         Op::Combine(op1, op2) => eval(op2, &eval(op1, table)),
     }
 }
 
-fn filter(table: &Table, name: &str, place: Place) -> Table {
+fn filter(table: &Table, names: &[String], place: Place) -> Table {
     let header = table.header.clone();
     let rows = table
         .rows
         .iter()
-        .filter(|row| row.name.get(place) == name)
+        .filter(|row| names.iter().any(|name| row.name.get(place) == name))
         .cloned()
         .collect();
     Table { header, rows }
@@ -85,13 +87,18 @@ fn group_by(table: &Table, place: Place) -> Table {
     Table { header, rows }
 }
 
-
 fn sort_by(table: &Table, sort: SortBy) -> Table {
     let header = table.header.clone();
     let mut rows = table.rows.clone();
     match sort {
         SortBy::Name => rows.sort_by_key(|row| row.name.clone()),
-        SortBy::Max  => rows.sort_by_key(|row| row.data[0]),
+        SortBy::Max => rows.sort_by_key(|row| row.data[0]),
     }
-    Table { header, rows }    
+    Table { header, rows }
+}
+
+fn limit(table: &Table, limit: usize) -> Table {
+    let header = table.header.clone();
+    let rows = table.rows.iter().rev().take(limit).rev().cloned().collect();
+    Table { header, rows }
 }

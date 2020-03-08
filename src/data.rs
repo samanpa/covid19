@@ -93,18 +93,17 @@ pub fn read(csv: Box<dyn Read>) -> Result<Table, Box<dyn Error>> {
     Ok(table)
 }
 
-
 impl Table {
     pub fn write<W: std::io::Write>(&self, w: W) -> Result<(), std::io::Error> {
         use std::io::Write;
         let mut writer = tabwriter::TabWriter::new(w);
-        
+
         write!(writer, "City\tState\tCountry\t")?;
         for header in self.header.iter().rev() {
             write!(writer, "{}\t", header)?;
         }
         writeln!(writer)?;
-        
+
         for row in &self.rows {
             let nm = &row.name;
             write!(writer, "{}\t{}\t{}\t", nm.city, nm.province, nm.country)?;
@@ -120,9 +119,7 @@ impl Table {
             if summary.is_empty() {
                 summary = data.copied().collect();
             } else {
-                summary.iter_mut()
-                    .zip(data)
-                    .for_each(|(v1, v2)| *v1 += v2);
+                summary.iter_mut().zip(data).for_each(|(v1, v2)| *v1 += v2);
             }
         }
         write!(writer, "Summary\t------\t-------\t")?;
