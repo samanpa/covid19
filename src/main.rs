@@ -19,7 +19,7 @@ struct Opts {
         default_value = "2",
         help = "Number of columns (days) to show"
     )]
-    num_entries: usize,
+    num_cols: usize,
     #[structopt(
         long,
         short,
@@ -35,18 +35,9 @@ struct Opts {
     limit: usize,
     #[structopt(long, help = "sort by name instead of number of confirmed cases")]
     by_name: bool,
-    #[structopt(subcommand)]
-    cmd: Command,
-}
-
-#[derive(StructOpt)]
-enum Command {
-    #[structopt(about = "Summary of cases by country")]
-    Countries { countries: Vec<String> },
-    #[structopt(about = "Summary of cases in the US by state")]
-    UsSummary,
-    #[structopt(about = "Worldwide summary")]
-    Summary,
+    #[structopt(long, help = "Group by states")]
+    states: bool,
+    countries: Vec<String>,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -56,24 +47,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let file = reqwest::blocking::get(&opts.url)?.text()?;
     let file = Box::new(std::io::Cursor::new(file.into_bytes()));
     let table = data::read(file)?;
-    let op = match opts.cmd {
-        Command::Countries { countries } => Op::Filter {
-            names: countries,
+    let op = match opts.countries.as_slice() {
+        [] => Op::GroupBy(Place::Country),
+        countries => Op::Filter {
+            names: countries.to_vec(),
             place: Place::Country,
-        },
-        Command::UsSummary => {
-            let names = vec!["US".to_string()];
-            let place = Place::Country;
-            let filter = Op::Filter { names, place };
-            let group_by = Op::GroupBy(Place::State);
-            Op::Combine(Box::new(filter), Box::new(group_by))
         }
-        Command::Summary => Op::GroupBy(Place::Country),
+    };
+    let op = if opts.states {
+        let group_by = Op::GroupBy(Place::State);
+        Op::Combine(Box::new(op), Box::new(group_by))
+    } else {
+        op
     };
 
     let select = Op::Select {
         start: 0,
-        size: opts.num_entries,
+        size: opts.num_cols,
         step: opts.skip,
     };
     let ops = Op::Combine(Box::new(op), Box::new(select));
