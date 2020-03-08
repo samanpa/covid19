@@ -7,6 +7,7 @@ edition = "2018"
 [dependencies]
 env_logger = "*"
 csv="*"
+num-format = "*"
 reqwest = { version = "0.10", features = ["blocking", "rustls-tls"] }
 serde = { version = "1", features = ["derive"] }
 structopt = "*"

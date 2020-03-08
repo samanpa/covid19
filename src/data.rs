@@ -124,7 +124,8 @@ impl Table {
         }
         write!(writer, "Summary\t------\t-------\t")?;
         for val in summary {
-            write!(writer, "{}\t", val)?;
+            use num_format::{Locale, ToFormattedString};
+            write!(writer, "{}\t", val.to_formatted_string(&Locale::en))?;
         }
         writeln!(writer, "\n")?;
         writer.flush()
