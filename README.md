@@ -30,6 +30,18 @@ ARGS:
 List the top 10 affected countries
 ```sh
 ./target/release/covid19 --limit 10
+City     State   Country         3/7/20   3/8/20
+                 Japan           461      502
+                 US              416      538
+                 Spain           500      673
+                 Others          696      696
+                 Germany         799      1,040
+                 France          949      1,126
+                 Iran            5,823    6,566
+                 South Korea     7,041    7,314
+                 Italy           5,883    7,375
+                 Mainland China  80,652   80,699
+Summary  ------  -------         103,220  106,529
 ```
 
 Get a summary of the weekly cases in Italy, UK, South Korea, Iran France and Germany for the last month
