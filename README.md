@@ -47,6 +47,7 @@ Summary  ------  -------         103,220  106,529
 
 Get a summary of the cases in Italy, UK, South Korea, Iran France and Germany for the last month (weekly intervals)
 ```sh
+./target/release/covid19 --num-cols 4 --skip 7 Italy UK "South Korea" Iran France Germany
 City     State   Country      2/16/20  2/23/20  3/1/20  3/8/20
                  UK           9        9        36      273
                  Germany      16       16       130     1,040
