@@ -45,7 +45,7 @@ City     State   Country         3/7/20   3/8/20
 Summary  ------  -------         103,220  106,529
 ```
 
-Get a summary of the weekly cases in Italy, UK, South Korea, Iran France and Germany for the last month
+Get a summary of the cases in Italy, UK, South Korea, Iran France and Germany for the last month (weekly intervals)
 ```sh
 City     State   Country      2/16/20  2/23/20  3/1/20  3/8/20
                  UK           9        9        36      273
