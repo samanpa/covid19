@@ -95,6 +95,7 @@ pub fn read(csv: Box<dyn Read>) -> Result<Table, Box<dyn Error>> {
 
 impl Table {
     pub fn write<W: std::io::Write>(&self, w: W) -> Result<(), std::io::Error> {
+        use num_format::{Locale, ToFormattedString};
         use std::io::Write;
         let mut writer = tabwriter::TabWriter::new(w);
 
@@ -108,7 +109,7 @@ impl Table {
             let nm = &row.name;
             write!(writer, "{}\t{}\t{}\t", nm.city, nm.province, nm.country)?;
             for val in row.data.iter().rev() {
-                write!(writer, "{}\t", val)?;
+                write!(writer, "{}\t", val.to_formatted_string(&Locale::en))?;
             }
             writeln!(writer)?;
         }
@@ -124,7 +125,6 @@ impl Table {
         }
         write!(writer, "Summary\t------\t-------\t")?;
         for val in summary {
-            use num_format::{Locale, ToFormattedString};
             write!(writer, "{}\t", val.to_formatted_string(&Locale::en))?;
         }
         writeln!(writer, "\n")?;

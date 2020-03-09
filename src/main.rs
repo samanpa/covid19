@@ -52,7 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         countries => Op::Filter {
             names: countries.to_vec(),
             place: Place::Country,
-        }
+        },
     };
     let op = if opts.states {
         let group_by = Op::GroupBy(Place::State);
