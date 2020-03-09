@@ -3,6 +3,7 @@ Utility to get summary of historical covid data.
 
 - The data is only updated at night to see current numbers [follow this link](https://www.arcgis.com/apps/opsdashboard/index.html)
 
+Will depend on a nightly/beta rustc till 2020-03-12
 
 ```sh
 USAGE:
