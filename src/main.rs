@@ -35,10 +35,10 @@ struct Opts {
     limit: usize,
     #[structopt(long, help = "sort by name instead of number of confirmed cases")]
     by_name: bool,
-    #[structopt(long, help = "Always group by country")]
-    no_states: bool,
+    #[structopt(long, help = "Group by states instead of the default by country")]
+    states: bool,
     #[structopt(long, default_value = "0", help = "Minimum value we want to show")]
-    min_value: u32,
+    min: u32,
     countries: Vec<String>,
 }
 
@@ -49,32 +49,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let file = reqwest::blocking::get(&opts.url)?.text()?;
     let file = Box::new(std::io::Cursor::new(file.into_bytes()));
     let table = data::read(file)?;
-    let op = match opts.countries.as_slice() {
-        [] => Op::GroupByCountry,
-        countries => Op::Filter(countries.to_vec()),
-    };
-    let op = if opts.no_states {
-        let group_by = Op::GroupByCountry;
-        Op::Combine(Box::new(op), Box::new(group_by))
-    } else {
-        op
-    };
-    let op = Op::Combine(Box::new(Op::GreaterThan(opts.min_value)), Box::new(op));
 
-    let select = Op::Select {
-        start: 0,
-        size: opts.num_cols,
-        step: opts.skip,
-    };
-    let ops = Op::Combine(Box::new(op), Box::new(select));
-    let table = ops::eval(&ops, &table);
-    let table = if opts.by_name {
-        ops::eval(&Op::SortBy(SortBy::Name), &table)
+    let sort = if opts.by_name {
+        SortBy::Name
     } else {
-        ops::eval(&Op::SortBy(SortBy::Max), &table)
+        SortBy::Max
     };
-    let table = ops::eval(&Op::Limit(opts.limit), &table);
+    let ops = vec![
+        match opts.countries.as_slice() {
+            [] => Op::NoOp,
+            countries => Op::Filter(countries.to_vec()),
+        },
+        if opts.states {
+            Op::NoOp
+        } else {
+            Op::GroupByCountry
+        },
+        Op::GreaterThan(opts.min),
+        Op::Select {
+            start: 0,
+            size: opts.num_cols,
+            step: opts.skip,
+        },
+        Op::SortBy(sort),
+        Op::Limit(opts.limit),
+    ];
 
+    let table = ops::eval(ops, table);
     table.write(std::io::stdout())?;
 
     Ok(())

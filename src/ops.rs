@@ -7,7 +7,7 @@ pub enum SortBy {
 }
 
 pub enum Op {
-    Combine(Box<Op>, Box<Op>),
+    NoOp,
     GroupByCountry,
     Filter(Vec<String>),
     Limit(usize),
@@ -20,16 +20,26 @@ pub enum Op {
     GreaterThan(u32),
 }
 
-pub fn eval(op: &Op, table: &Table) -> Table {
-    match op {
-        Op::Filter(names) => filter(table, names),
-        Op::GroupByCountry => group_by(table),
-        Op::Limit(lmit) => limit(table, *lmit),
-        Op::Select { start, size, step } => select(table, *start, *size, *step),
-        Op::SortBy(op) => sort_by(table, *op),
-        Op::Combine(op1, op2) => eval(op2, &eval(op1, table)),
-        Op::GreaterThan(v) => greater_than(table, *v),
+impl Op {
+    fn eval(&self, table: Table) -> Table {
+        match self {
+            Op::NoOp => table,
+            Op::Filter(names) => filter(&table, names),
+            Op::GroupByCountry => group_by(&table),
+            Op::Limit(lmit) => limit(&table, *lmit),
+            Op::Select { start, size, step } => select(&table, *start, *size, *step),
+            Op::SortBy(op) => sort_by(&table, *op),
+            Op::GreaterThan(v) => greater_than(&table, *v),
+        }
     }
+}
+
+pub fn eval(ops: Vec<Op>, table: Table) -> Table {
+    let mut result = table;
+    for op in &ops {
+        result = op.eval(result);
+    }
+    result
 }
 
 fn filter(table: &Table, names: &[String]) -> Table {

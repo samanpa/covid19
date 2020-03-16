@@ -29,40 +29,54 @@ ARGS:
 List the top 10 affected countries
 ```sh
 ./target/release/covid19 --limit 10
-City     State   Country         3/7/20   3/8/20
-                 Japan           461      502
-                 US              416      538
-                 Spain           500      673
-                 Others          696      696
-                 Germany         799      1,040
-                 France          949      1,126
-                 Iran            5,823    6,566
-                 South Korea     7,041    7,314
-                 Italy           5,883    7,375
-                 Mainland China  80,652   80,699
-Summary  ------  -------         103,220  106,529
+State   Country         3/7/20   3/8/20
+        Japan           461      502
+        US              416      538
+        Spain           500      673
+        Others          696      696
+        Germany         799      1,040
+        France          949      1,126
+        Iran            5,823    6,566
+        South Korea     7,041    7,314
+        Italy           5,883    7,375
+        Mainland China  80,652   80,699
+Summary -------         103,220  106,529
 ```
 
 Get a summary of the cases in Italy, UK, South Korea, Iran France and Germany for the last month (weekly intervals)
 ```sh
 ./target/release/covid19 --num-cols 4 --skip 7 Italy UK "South Korea" Iran France Germany
-City     State   Country      2/16/20  2/23/20  3/1/20  3/8/20
-                 UK           9        9        36      273
-                 Germany      16       16       130     1,040
-                 France       12       12       130     1,126
-                 Iran         0        43       978     6,566
-                 South Korea  29       602      3,736   7,314
-                 Italy        3        155      1,694   7,375
-Summary  ------  -------      69       837      6,704   23,694
+State   Country      2/16/20  2/23/20  3/1/20  3/8/20
+        UK           9        9        36      273
+        Germany      16       16       130     1,040
+        France       12       12       130     1,126
+        Iran         0        43       978     6,566
+        South Korea  29       602      3,736   7,314
+        Italy        3        155      1,694   7,375
+Summary -------      69       837      6,704   23,694
 ```
 
 
 Get the top 3 affected states in the US
 ```sh
 ./target/release/covid19 --limit 3 --num-cols 4 --states US
-City     State   Country  3/4/20  3/5/20  3/6/20  3/7/20
-         NY      US       11      23      36      76
-         CA      US       35      51      59      82
-         WA      US       39      70      83      107
-Summary  ------  -------  85      144     178     265
+State   Country  3/4/20  3/5/20  3/6/20  3/7/20
+NY      US       11      23      36      76
+CA      US       35      51      59      82
+WA      US       39      70      83      107
+Summary -------  85      144     178     265
+```
+
+
+Get the states with at least at least 100 cases
+```sh
+./target/release/covid19 --min 100 --states US`
+State          Country  3/14/20  3/15/20
+Florida        US       76       115
+Colorado       US       101      131
+Massachusetts  US       138      164
+California     US       340      426
+Washington     US       572      643
+New York       US       525      732
+Summary        -------  1,752    2,211
 ```
