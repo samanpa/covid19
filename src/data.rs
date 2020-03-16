@@ -16,51 +16,15 @@ pub struct Row {
 
 #[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Hash, Clone)]
 pub struct Name {
-    country: String,
-    province: String,
-    city: String,
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum Place {
-    Country,
-    State,
+    pub country: String,
+    pub province: String,
 }
 
 impl Name {
-    pub fn new(city_or_province: &str, country: &str) -> Self {
-        let (city, province) = match city_or_province.find(',') {
-            Some(idx) => (&city_or_province[..idx], &city_or_province[idx + 1..]),
-            None => ("", city_or_province),
-        };
+    pub fn new(province: &str, country: &str) -> Self {
         Name {
-            city: city.trim().to_string(),
             province: province.trim().to_string(),
             country: country.to_string(),
-        }
-    }
-
-    pub fn group_name(&self, place: Place) -> Self {
-        let country = self.country.clone();
-        let province = self.province.clone();
-        match place {
-            Place::Country => Self {
-                country,
-                province: String::new(),
-                city: String::new(),
-            },
-            Place::State => Self {
-                country,
-                province,
-                city: String::new(),
-            },
-        }
-    }
-
-    pub fn get(&self, place: Place) -> &str {
-        match place {
-            Place::Country => &self.country,
-            Place::State => &self.province,
         }
     }
 }
@@ -99,7 +63,7 @@ impl Table {
         use std::io::Write;
         let mut writer = tabwriter::TabWriter::new(w);
 
-        write!(writer, "City\tState\tCountry\t")?;
+        write!(writer, "State\tCountry\t")?;
         for header in self.header.iter().rev() {
             write!(writer, "{}\t", header)?;
         }
@@ -107,7 +71,7 @@ impl Table {
 
         for row in &self.rows {
             let nm = &row.name;
-            write!(writer, "{}\t{}\t{}\t", nm.city, nm.province, nm.country)?;
+            write!(writer, "{}\t{}\t", nm.province, nm.country)?;
             for val in row.data.iter().rev() {
                 write!(writer, "{}\t", val.to_formatted_string(&Locale::en))?;
             }
@@ -123,7 +87,7 @@ impl Table {
                 summary.iter_mut().zip(data).for_each(|(v1, v2)| *v1 += v2);
             }
         }
-        write!(writer, "Summary\t------\t-------\t")?;
+        write!(writer, "Summary\t-------\t")?;
         for val in summary {
             write!(writer, "{}\t", val.to_formatted_string(&Locale::en))?;
         }

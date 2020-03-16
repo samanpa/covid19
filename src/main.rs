@@ -1,7 +1,6 @@
 mod data;
 mod ops;
 
-use data::Place;
 use ops::{Op, SortBy};
 use structopt::StructOpt;
 
@@ -29,14 +28,17 @@ struct Opts {
     skip: usize,
     #[structopt(
         long,
-        default_value = "50000",
+        short,
+        default_value = "100",
         help = "maximum number of entries to show"
     )]
     limit: usize,
     #[structopt(long, help = "sort by name instead of number of confirmed cases")]
     by_name: bool,
-    #[structopt(long, help = "Group by states")]
-    states: bool,
+    #[structopt(long, help = "Always group by country")]
+    no_states: bool,
+    #[structopt(long, default_value = "0", help = "Minimum value we want to show")]
+    min_value: u32,
     countries: Vec<String>,
 }
 
@@ -48,18 +50,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let file = Box::new(std::io::Cursor::new(file.into_bytes()));
     let table = data::read(file)?;
     let op = match opts.countries.as_slice() {
-        [] => Op::GroupBy(Place::Country),
-        countries => Op::Filter {
-            names: countries.to_vec(),
-            place: Place::Country,
-        },
+        [] => Op::GroupByCountry,
+        countries => Op::Filter(countries.to_vec()),
     };
-    let op = if opts.states {
-        let group_by = Op::GroupBy(Place::State);
+    let op = if opts.no_states {
+        let group_by = Op::GroupByCountry;
         Op::Combine(Box::new(op), Box::new(group_by))
     } else {
         op
     };
+    let op = Op::Combine(Box::new(Op::GreaterThan(opts.min_value)), Box::new(op));
 
     let select = Op::Select {
         start: 0,
