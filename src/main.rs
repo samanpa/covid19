@@ -33,7 +33,7 @@ struct Opts {
     )]
     num_rows: usize,
     #[structopt(long, help = "sort by name instead of number of confirmed cases")]
-    by_name: bool,
+    sort_by_name: bool,
     #[structopt(long, help = "Group by states instead of the default by country")]
     states: bool,
     #[structopt(long, default_value = "0", help = "Minimum value we want to show")]
@@ -49,7 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let file = Box::new(std::io::Cursor::new(file.into_bytes()));
     let table = data::read(file)?;
 
-    let sort = if opts.by_name {
+    let sort = if opts.sort_by_name {
         SortBy::Name
     } else {
         SortBy::Max

@@ -8,10 +8,10 @@ USAGE:
     covid19 [FLAGS] [OPTIONS] [countries]...
 
 FLAGS:
-        --by-name    sort by name instead of number of confirmed cases
-    -h, --help       Prints help information
-        --states     Group by states instead of the default by country
-    -V, --version    Prints version information
+    -h, --help            Prints help information
+        --sort-by-name    sort by name instead of number of confirmed cases
+        --states          Group by states instead of the default by country
+    -V, --version         Prints version information
 
 OPTIONS:
         --min <min>              Minimum value we want to show [default: 0]
@@ -29,7 +29,7 @@ ARGS:
 ## Examples
 List the top 10 affected countries
 ```sh
-./target/release/covid19 --limit 10
+./target/release/covid19 --num-rows 10
 State   Country         3/7/20   3/8/20
         Japan           461      502
         US              416      538
@@ -60,7 +60,7 @@ Summary -------      69       837      6,704   23,694
 
 Get the top 3 affected states in the US
 ```sh
-./target/release/covid19 --limit 3 --num-cols 4 --states US
+./target/release/covid19 --num-rows 3 --num-cols 4 --states US
 State   Country  3/4/20  3/5/20  3/6/20  3/7/20
 NY      US       11      23      36      76
 CA      US       35      51      59      82
