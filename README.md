@@ -10,11 +10,12 @@ USAGE:
 FLAGS:
         --by-name    sort by name instead of number of confirmed cases
     -h, --help       Prints help information
-        --states     Group by states
+        --states     Group by states instead of the default by country
     -V, --version    Prints version information
 
 OPTIONS:
-        --limit <limit>          maximum number of entries to show [default: 50000]
+    -l, --limit <limit>          maximum number of entries to show [default: 100]
+        --min <min>              Minimum value we want to show [default: 0]
     -n, --num-cols <num-cols>    Number of columns (days) to show [default: 2]
     -s, --skip <skip>            1 for daily stats, 7 for weekly, 30 for monthly [default: 1]
     -u, --url <url>               [default: https://raw.githubusercontent.com/CSSEGISandData/COVID-
@@ -22,7 +23,7 @@ OPTIONS:
                                  Confirmed.csv]
 
 ARGS:
-   <countries>...    
+    <countries>...
 ```
 
 ## Examples
