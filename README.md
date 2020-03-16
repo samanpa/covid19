@@ -14,9 +14,9 @@ FLAGS:
     -V, --version    Prints version information
 
 OPTIONS:
-    -l, --limit <limit>          maximum number of entries to show [default: 100]
         --min <min>              Minimum value we want to show [default: 0]
     -n, --num-cols <num-cols>    Number of columns (days) to show [default: 2]
+    -n, --num-rows <num-rows>    maximum number of entries to show [default: 100]
     -s, --skip <skip>            1 for daily stats, 7 for weekly, 30 for monthly [default: 1]
     -u, --url <url>               [default: https://raw.githubusercontent.com/CSSEGISandData/COVID-
                                  19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-

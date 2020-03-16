@@ -28,11 +28,10 @@ struct Opts {
     skip: usize,
     #[structopt(
         long,
-        short,
         default_value = "100",
         help = "maximum number of entries to show"
     )]
-    limit: usize,
+    num_rows: usize,
     #[structopt(long, help = "sort by name instead of number of confirmed cases")]
     by_name: bool,
     #[structopt(long, help = "Group by states instead of the default by country")]
@@ -72,7 +71,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             step: opts.skip,
         },
         Op::SortBy(sort),
-        Op::Limit(opts.limit),
+        Op::Limit(opts.num_rows),
     ];
 
     let table = ops::eval(ops, table);
