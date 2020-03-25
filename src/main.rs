@@ -9,13 +9,13 @@ struct Opts {
     #[structopt(
         long,
         short,
-        default_value = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv"
+        default_value = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
     )]
     url: String,
     #[structopt(
         long,
         short,
-        default_value = "2",
+        default_value = "3",
         help = "Number of columns (days) to show"
     )]
     num_cols: usize,
@@ -28,7 +28,7 @@ struct Opts {
     skip: usize,
     #[structopt(
         long,
-        default_value = "100",
+        default_value = "50",
         help = "maximum number of entries to show"
     )]
     num_rows: usize,
@@ -55,6 +55,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         SortBy::Max
     };
     let ops = vec![
+        Op::Select {
+            start: 0,
+            size: opts.num_cols,
+            step: opts.skip,
+        },
         match opts.countries.as_slice() {
             [] => Op::NoOp,
             countries => Op::Filter(countries.to_vec()),
@@ -65,15 +70,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Op::GroupByCountry
         },
         Op::GreaterThan(opts.min),
-        Op::Select {
-            start: 0,
-            size: opts.num_cols,
-            step: opts.skip,
-        },
         Op::SortBy(sort),
         Op::Limit(opts.num_rows),
     ];
-
     let table = ops::eval(ops, table);
     table.write(std::io::stdout())?;
 
