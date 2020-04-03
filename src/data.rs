@@ -10,23 +10,8 @@ pub struct Table {
 
 #[derive(Debug, Clone)]
 pub struct Row {
-    pub name: Name,
+    pub name: String,
     pub data: Vec<u32>,
-}
-
-#[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Hash, Clone)]
-pub struct Name {
-    pub country: String,
-    pub province: String,
-}
-
-impl Name {
-    pub fn new(province: &str, country: &str) -> Self {
-        Name {
-            province: province.trim().to_string(),
-            country: country.to_string(),
-        }
-    }
 }
 
 pub fn read(csv: Box<dyn Read>) -> Result<Table, Box<dyn Error>> {
@@ -41,8 +26,8 @@ pub fn read(csv: Box<dyn Read>) -> Result<Table, Box<dyn Error>> {
     let header = Rc::new(header);
     for result in rdr.deserialize() {
         let row: Vec<String> = result?;
-        if let [province, country, _long, _lat, data @ ..] = row.as_slice() {
-            let name = Name::new(province, country);
+        if let [_province, country, _long, _lat, data @ ..] = row.as_slice() {
+            let name = country.to_string();
             let mut data: Vec<u32> = data
                 .iter()
                 .map(|val| val.parse().unwrap_or_default())
@@ -63,7 +48,7 @@ impl Table {
         use std::io::Write;
         let mut writer = tabwriter::TabWriter::new(w);
 
-        write!(writer, "State\tCountry\t")?;
+        write!(writer, "Location\t")?;
         for header in self.header.iter().rev() {
             write!(writer, "{}\t", header)?;
         }
@@ -71,7 +56,7 @@ impl Table {
 
         for row in &self.rows {
             let nm = &row.name;
-            write!(writer, "{}\t{}\t", nm.province, nm.country)?;
+            write!(writer, "{}\t", nm)?;
             for val in row.data.iter().rev() {
                 write!(writer, "{}\t", val.to_formatted_string(&Locale::en))?;
             }
@@ -87,7 +72,7 @@ impl Table {
                 summary.iter_mut().zip(data).for_each(|(v1, v2)| *v1 += v2);
             }
         }
-        write!(writer, "Summary\t-------\t")?;
+        write!(writer, "Summary-------\t")?;
         for val in summary {
             write!(writer, "{}\t", val.to_formatted_string(&Locale::en))?;
         }

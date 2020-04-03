@@ -5,12 +5,24 @@ Utility to get summary of historical covid data.
 
 ```sh
 USAGE:
-    covid19 [FLAGS] [OPTIONS] [countries]...
+    covid19 <SUBCOMMAND>
 
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+SUBCOMMANDS:
+    confirmed
+    deaths
+    help         Prints this message or the help of the given subcommand(s)
+USAGE:
+    covid19 [FLAGS] [OPTIONS] [countries]...
+```
+
+```sh
 FLAGS:
     -h, --help            Prints help information
         --sort-by-name    sort by name instead of number of confirmed cases
-        --states          Group by states instead of the default by country
     -V, --version         Prints version information
 
 OPTIONS:
@@ -29,7 +41,7 @@ ARGS:
 ## Examples
 List the top 10 affected countries
 ```sh
-./target/release/covid19 --num-rows 10
+./target/release/covid19 confirmed --num-rows 10
 State   Country         3/7/20   3/8/20
         Japan           461      502
         US              416      538
@@ -46,7 +58,7 @@ Summary -------         103,220  106,529
 
 Get a summary of the cases in Italy, UK, South Korea, Iran France and Germany for the last month (weekly intervals)
 ```sh
-./target/release/covid19 --num-cols 4 --skip 7 Italy UK "South Korea" Iran France Germany
+./target/release/covid19 confirmed --num-cols 4 --skip 7 Italy UK "South Korea" Iran France Germany
 State   Country      2/16/20  2/23/20  3/1/20  3/8/20
         UK           9        9        36      273
         Germany      16       16       130     1,040
@@ -60,7 +72,7 @@ Summary -------      69       837      6,704   23,694
 
 Get the top 3 affected states in the US
 ```sh
-./target/release/covid19 --num-rows 3 --num-cols 4 --states US
+./target/release/covid19 confirmed --num-rows 3 --num-cols 4 --states US
 State   Country  3/4/20  3/5/20  3/6/20  3/7/20
 NY      US       11      23      36      76
 CA      US       35      51      59      82
@@ -71,7 +83,7 @@ Summary -------  85      144     178     265
 
 Get the states with at least at least 100 cases
 ```sh
-./target/release/covid19 --min 100 --states US`
+./target/release/covid19 states --min 100`
 State          Country  3/14/20  3/15/20
 Florida        US       76       115
 Colorado       US       101      131
