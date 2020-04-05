@@ -14,9 +14,9 @@ FLAGS:
 SUBCOMMANDS:
     confirmed
     deaths
-    help         Prints this message or the help of the given subcommand(s)
-USAGE:
-    covid19 [FLAGS] [OPTIONS] [countries]...
+    help            Prints this message or the help of the given subcommand(s)
+    us-confirmed
+    us-deaths
 ```
 
 ```sh

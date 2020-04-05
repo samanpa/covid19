@@ -91,7 +91,7 @@ impl Table {
         use std::io::Write;
         let mut writer = tabwriter::TabWriter::new(w);
 
-        write!(writer, "State\tCountry\t")?;
+        write!(writer, "County\tState/Country\t")?;
         for header in self.header.iter().rev() {
             write!(writer, "{}\t", header)?;
         }
