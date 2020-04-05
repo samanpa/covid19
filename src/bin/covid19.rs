@@ -26,6 +26,8 @@ struct CommonOpts {
     min: u32,
     #[structopt(long, help = "Break down by county/state")]
     break_down: bool,
+    #[structopt(long, help = "Show diffs")]
+    show_diffs: bool,
     countries: Vec<String>,
 }
 
@@ -153,7 +155,7 @@ fn run(opts: CommonOpts, table: Table) -> Result<(), Box<dyn std::error::Error>>
         Op::Limit(opts.num_rows),
     ];
     let table = ops::eval(ops, table);
-    table.write(std::io::stdout())?;
+    table.write(opts.show_diffs, std::io::stdout())?;
 
     Ok(())
 }

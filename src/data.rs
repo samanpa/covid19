@@ -86,9 +86,10 @@ pub fn read_us(csv: Box<dyn Read>) -> Result<Table, Box<dyn Error>> {
 }
 
 impl Table {
-    pub fn write<W: std::io::Write>(&self, w: W) -> Result<(), std::io::Error> {
+    pub fn write<W: std::io::Write>(&self, diffs: bool, w: W) -> Result<(), std::io::Error> {
         use num_format::{Locale, ToFormattedString};
         use std::io::Write;
+        let locale = &Locale::en;
         let mut writer = tabwriter::TabWriter::new(w);
 
         write!(writer, "County\tState/Country\t")?;
@@ -99,9 +100,17 @@ impl Table {
 
         for row in &self.rows {
             let nm = &row.name;
+            let mut prev: i32 = 0;
             write!(writer, "{}\t{}\t", nm.province, nm.country)?;
             for val in row.data.iter().rev() {
-                write!(writer, "{}\t", val.to_formatted_string(&Locale::en))?;
+                let val = *val as i32;
+                let fval = if diffs {
+                    (val - prev).to_formatted_string(locale)
+                } else {
+                    val.to_formatted_string(locale)
+                };
+                write!(writer, "{}\t", fval)?;
+                prev = val;
             }
             writeln!(writer)?;
         }
