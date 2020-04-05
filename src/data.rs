@@ -10,8 +10,23 @@ pub struct Table {
 
 #[derive(Debug, Clone)]
 pub struct Row {
-    pub name: String,
+    pub name: Name,
     pub data: Vec<u32>,
+}
+
+#[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Hash, Clone)]
+pub struct Name {
+    pub country: String,
+    pub province: String,
+}
+
+impl Name {
+    pub fn new(province: &str, country: &str) -> Self {
+        Name {
+            province: province.trim().to_string(),
+            country: country.to_string(),
+        }
+    }
 }
 
 pub fn read(csv: Box<dyn Read>) -> Result<Table, Box<dyn Error>> {
@@ -26,8 +41,36 @@ pub fn read(csv: Box<dyn Read>) -> Result<Table, Box<dyn Error>> {
     let header = Rc::new(header);
     for result in rdr.deserialize() {
         let row: Vec<String> = result?;
-        if let [_province, country, _long, _lat, data @ ..] = row.as_slice() {
-            let name = country.to_string();
+        if let [province, country, _long, _lat, data @ ..] = row.as_slice() {
+            let name = Name::new(province, country);
+            let mut data: Vec<u32> = data
+                .iter()
+                .map(|val| val.parse().unwrap_or_default())
+                .collect();
+            data.reverse();
+            let row = Row { name, data };
+            rows.push(row);
+        }
+    }
+    rows.sort_by_key(|row| row.name.clone());
+    let table = Table { header, rows };
+    Ok(table)
+}
+
+pub fn read_us(csv: Box<dyn Read>) -> Result<Table, Box<dyn Error>> {
+    let mut rows = Vec::new();
+    let mut rdr = csv::Reader::from_reader(csv);
+    let header: Vec<String> = rdr
+        .headers()?
+        .iter()
+        .rev()
+        .map(ToString::to_string)
+        .collect();
+    let header = Rc::new(header);
+    for result in rdr.deserialize() {
+        let row: Vec<String> = result?;
+	if let [_, _, _, _, _, county, state, _, _, _, data @ ..] = row.as_slice() {
+            let name = Name::new(county, state);
             let mut data: Vec<u32> = data
                 .iter()
                 .map(|val| val.parse().unwrap_or_default())
@@ -48,7 +91,7 @@ impl Table {
         use std::io::Write;
         let mut writer = tabwriter::TabWriter::new(w);
 
-        write!(writer, "Location\t")?;
+        write!(writer, "State\tCountry\t")?;
         for header in self.header.iter().rev() {
             write!(writer, "{}\t", header)?;
         }
@@ -56,7 +99,7 @@ impl Table {
 
         for row in &self.rows {
             let nm = &row.name;
-            write!(writer, "{}\t", nm)?;
+            write!(writer, "{}\t{}\t", nm.province, nm.country)?;
             for val in row.data.iter().rev() {
                 write!(writer, "{}\t", val.to_formatted_string(&Locale::en))?;
             }
@@ -72,7 +115,7 @@ impl Table {
                 summary.iter_mut().zip(data).for_each(|(v1, v2)| *v1 += v2);
             }
         }
-        write!(writer, "Summary-------\t")?;
+        write!(writer, "Summary\t-------\t")?;
         for val in summary {
             write!(writer, "{}\t", val.to_formatted_string(&Locale::en))?;
         }

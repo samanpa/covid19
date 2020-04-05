@@ -1,4 +1,4 @@
-use crate::data::{Row, Table};
+use crate::data::{Name, Row, Table};
 
 #[derive(Clone, Copy)]
 pub enum SortBy {
@@ -47,7 +47,7 @@ fn filter(table: &Table, names: &[String]) -> Table {
     let rows = table
         .rows
         .iter()
-        .filter(|row| names.iter().any(|name| &row.name == name))
+        .filter(|row| names.iter().any(|name| &row.name.country == name))
         .cloned()
         .collect();
     Table { header, rows }
@@ -79,7 +79,7 @@ fn group_by(table: &Table) -> Table {
     let mut btree = std::collections::BTreeMap::new();
     let header = table.header.clone();
     for row in &table.rows {
-        let name = &row.name;
+        let name = &row.name.country;
         btree
             .entry(name)
             .and_modify(|data: &mut Vec<u32>| {
@@ -91,8 +91,8 @@ fn group_by(table: &Table) -> Table {
     }
     let rows = btree
         .into_iter()
-        .map(|(name, data)| Row {
-            name: name.clone(),
+        .map(|(country, data)| Row {
+            name: Name::new("", country),
             data,
         })
         .collect();

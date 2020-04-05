@@ -45,7 +45,7 @@ struct ConfirmedOpts {
 }
 
 #[derive(StructOpt)]
-struct DeathOpts {
+struct DeathsOpts {
     #[structopt(
         long,
         short,
@@ -57,9 +57,35 @@ struct DeathOpts {
 }
 
 #[derive(StructOpt)]
+struct ConfirmedUSOpts {
+    #[structopt(
+        long,
+        short,
+        default_value = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv"
+    )]
+    url: String,
+    #[structopt(flatten)]
+    common_opts: CommonOpts,
+}
+
+#[derive(StructOpt)]
+struct DeathsUSOpts {
+    #[structopt(
+        long,
+        short,
+        default_value = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv"
+    )]
+    url: String,
+    #[structopt(flatten)]
+    common_opts: CommonOpts,
+}
+
+#[derive(StructOpt)]
 enum Opts {
     Confirmed(ConfirmedOpts),
-    Deaths(DeathOpts),
+    Deaths(DeathsOpts),
+    USConfirmed(ConfirmedUSOpts),
+    USDeaths(DeathsUSOpts),
 }
 
 impl Opts {
@@ -75,6 +101,18 @@ impl Opts {
 		let file = reqwest::blocking::get(&opts.url)?.text()?;
 		let file = Box::new(std::io::Cursor::new(file.into_bytes()));
 		let table = data::read(file)?;
+		(table, opts.common_opts)
+	    }
+	    Self::USConfirmed(opts) => {
+		let file = reqwest::blocking::get(&opts.url)?.text()?;
+		let file = Box::new(std::io::Cursor::new(file.into_bytes()));
+		let table = data::read_us(file)?;
+		(table, opts.common_opts)
+	    }
+	    Self::USDeaths(opts) => {
+		let file = reqwest::blocking::get(&opts.url)?.text()?;
+		let file = Box::new(std::io::Cursor::new(file.into_bytes()));
+		let table = data::read_us(file)?;
 		(table, opts.common_opts)
 	    }
 	};
@@ -94,7 +132,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 
 fn run(opts: CommonOpts, table: Table) -> Result<(), Box<dyn std::error::Error>> {
-        let sort = if opts.sort_by_name {
+    let sort = if opts.sort_by_name {
         SortBy::Name
     } else {
         SortBy::Max
