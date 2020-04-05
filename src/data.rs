@@ -69,7 +69,7 @@ pub fn read_us(csv: Box<dyn Read>) -> Result<Table, Box<dyn Error>> {
     let header = Rc::new(header);
     for result in rdr.deserialize() {
         let row: Vec<String> = result?;
-	if let [_, _, _, _, _, county, state, _, _, _, data @ ..] = row.as_slice() {
+        if let [_, _, _, _, _, county, state, _, _, _, data @ ..] = row.as_slice() {
             let name = Name::new(county, state);
             let mut data: Vec<u32> = data
                 .iter()

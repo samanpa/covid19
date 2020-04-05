@@ -2,7 +2,6 @@ use covid19::data::{self, Table};
 use covid19::ops::{self, Op, SortBy};
 use structopt::StructOpt;
 
-
 #[derive(StructOpt)]
 struct CommonOpts {
     #[structopt(
@@ -19,16 +18,14 @@ struct CommonOpts {
         help = "1 for daily stats, 7 for weekly, 30 for monthly"
     )]
     skip: usize,
-    #[structopt(
-        long,
-        default_value = "50",
-        help = "maximum number of entries to show"
-    )]
+    #[structopt(long, default_value = "50", help = "maximum number of entries to show")]
     num_rows: usize,
     #[structopt(long, help = "sort by name instead of number of confirmed cases")]
     sort_by_name: bool,
     #[structopt(long, default_value = "0", help = "Minimum value we want to show")]
     min: u32,
+    #[structopt(long, help = "Break down by county/state")]
+    break_down: bool,
     countries: Vec<String>,
 }
 
@@ -90,34 +87,34 @@ enum Opts {
 
 impl Opts {
     fn get_table(self) -> Result<(Table, CommonOpts), Box<dyn std::error::Error>> {
-	let (table, opts) = match self {
-	    Self::Confirmed(opts) => {
-		let file = reqwest::blocking::get(&opts.url)?.text()?;
-		let file = Box::new(std::io::Cursor::new(file.into_bytes()));
-		let table = data::read(file)?;
-		(table, opts.common_opts)
-	    }
-	    Self::Deaths(opts) => {
-		let file = reqwest::blocking::get(&opts.url)?.text()?;
-		let file = Box::new(std::io::Cursor::new(file.into_bytes()));
-		let table = data::read(file)?;
-		(table, opts.common_opts)
-	    }
-	    Self::USConfirmed(opts) => {
-		let file = reqwest::blocking::get(&opts.url)?.text()?;
-		let file = Box::new(std::io::Cursor::new(file.into_bytes()));
-		let table = data::read_us(file)?;
-		(table, opts.common_opts)
-	    }
-	    Self::USDeaths(opts) => {
-		let file = reqwest::blocking::get(&opts.url)?.text()?;
-		let file = Box::new(std::io::Cursor::new(file.into_bytes()));
-		let table = data::read_us(file)?;
-		(table, opts.common_opts)
-	    }
-	};
-		
-	Ok((table, opts))
+        let (table, opts) = match self {
+            Self::Confirmed(opts) => {
+                let file = reqwest::blocking::get(&opts.url)?.text()?;
+                let file = Box::new(std::io::Cursor::new(file.into_bytes()));
+                let table = data::read(file)?;
+                (table, opts.common_opts)
+            }
+            Self::Deaths(opts) => {
+                let file = reqwest::blocking::get(&opts.url)?.text()?;
+                let file = Box::new(std::io::Cursor::new(file.into_bytes()));
+                let table = data::read(file)?;
+                (table, opts.common_opts)
+            }
+            Self::USConfirmed(opts) => {
+                let file = reqwest::blocking::get(&opts.url)?.text()?;
+                let file = Box::new(std::io::Cursor::new(file.into_bytes()));
+                let table = data::read_us(file)?;
+                (table, opts.common_opts)
+            }
+            Self::USDeaths(opts) => {
+                let file = reqwest::blocking::get(&opts.url)?.text()?;
+                let file = Box::new(std::io::Cursor::new(file.into_bytes()));
+                let table = data::read_us(file)?;
+                (table, opts.common_opts)
+            }
+        };
+
+        Ok((table, opts))
     }
 }
 
@@ -129,7 +126,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     run(opts, table)
 }
-
 
 fn run(opts: CommonOpts, table: Table) -> Result<(), Box<dyn std::error::Error>> {
     let sort = if opts.sort_by_name {
@@ -147,7 +143,11 @@ fn run(opts: CommonOpts, table: Table) -> Result<(), Box<dyn std::error::Error>>
             [] => Op::NoOp,
             countries => Op::Filter(countries.to_vec()),
         },
-        Op::GroupByCountry,
+        if opts.break_down {
+            Op::NoOp
+        } else {
+            Op::GroupByCountry
+        },
         Op::GreaterThan(opts.min),
         Op::SortBy(sort),
         Op::Limit(opts.num_rows),
