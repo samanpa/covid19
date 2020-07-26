@@ -150,7 +150,7 @@ fn run(opts: CommonOpts, table: Table) -> Result<(), Box<dyn std::error::Error>>
         } else {
             Op::GroupByCountry
         },
-        Op::GreaterThan(opts.min),
+        //Op::GreaterThan(opts.min),
         Op::SortBy(sort),
         Op::Limit(opts.num_rows),
     ];

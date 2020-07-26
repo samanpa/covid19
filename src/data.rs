@@ -100,17 +100,19 @@ impl Table {
 
         for row in &self.rows {
             let nm = &row.name;
-            let mut prev: i32 = 0;
+            let mut prev: Option<i32> = None;
             write!(writer, "{}\t{}\t", nm.province, nm.country)?;
             for val in row.data.iter().rev() {
                 let val = *val as i32;
                 let fval = if diffs {
-                    (val - prev).to_formatted_string(locale)
+		    prev.map(|prev| val - prev)
+    			.unwrap_or_default()
+			.to_formatted_string(locale)
                 } else {
                     val.to_formatted_string(locale)
                 };
                 write!(writer, "{}\t", fval)?;
-                prev = val;
+                prev = Some(val);
             }
             writeln!(writer)?;
         }
@@ -131,4 +133,17 @@ impl Table {
         writeln!(writer, "\n")?;
         writer.flush()
     }
+}
+
+
+fn fg(r: u8, g: u8, b: u8) -> String {
+    format!("38;2;{};{};{}", r, g, b)
+}
+
+fn bg(r: u8, g: u8, b: u8) -> String {
+    format!("48;2;{};{};{}", r, g, b)
+}
+
+fn format(r: u8, g: u8, b: u8, text: &str) -> String {
+    format!("\x1b[{}m\x1b[{}m{}\x1b[m", fg(r, g, b), bg(255, 255, 255), text)
 }

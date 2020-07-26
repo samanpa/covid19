@@ -1,11 +1,12 @@
 use crate::data::{Name, Row, Table};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum SortBy {
     Max,
     Name,
 }
 
+#[derive(Debug)]
 pub enum Op {
     NoOp,
     GroupByCountry,
@@ -38,6 +39,7 @@ pub fn eval(ops: Vec<Op>, table: Table) -> Table {
     let mut result = table;
     for op in &ops {
         result = op.eval(result);
+
     }
     result
 }
